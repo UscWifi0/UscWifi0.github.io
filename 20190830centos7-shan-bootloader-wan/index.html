@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" >
+
+<title>20190830CentOS7删bootloader玩 | quansen88.cn</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://kill0es.github.io/favicon.ico?v=1623993914396">
+<link rel="stylesheet" href="https://kill0es.github.io/styles/main.css">
+
+
+
+<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+
+
+    <meta name="description" content="CentOS7没事删bootloader和stage1.5阶段玩
+
+众所周知bootloader位于磁盘前446字节，属于stage1.0阶段
+磁盘512字节后有一段空间是stage1.5阶段，用于找到启动的img和vmlinuz
+众所周知..." />
+    <meta name="keywords" content="centos" />
+  </head>
+  <body>
+    <div id="app" class="main">
+
+      <div class="sidebar" :class="{ 'full-height': menuVisible }">
+  <div class="top-container" data-aos="fade-right">
+    <div class="top-header-container">
+      <a class="site-title-container" href="https://kill0es.github.io">
+        <img src="https://kill0es.github.io/images/avatar.png?v=1623993914396" class="site-logo">
+        <h1 class="site-title">quansen88.cn</h1>
+      </a>
+      <div class="menu-btn" @click="menuVisible = !menuVisible">
+        <div class="line"></div>
+      </div>
+    </div>
+    <div>
+      
+        
+          <a href="/" class="site-nav">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="site-nav">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="site-nav">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="site-nav">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+  <div class="bottom-container" data-aos="flip-up" data-aos-offset="0">
+    <div class="social-container">
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    </div>
+    <div class="site-description">
+      linux运维
+    </div>
+    <div class="site-footer">
+      Powered by <a href="https://github.com/kill0es/" target="_blank">kill0es</a> | <a class="rss" href="https://kill0es.github.io/atom.xml" target="_blank">RSS</a>
+    </div>
+  </div>
+</div>
+
+
+      <div class="main-container">
+        <div class="content-container" data-aos="fade-up">
+          <div class="post-detail">
+            <h2 class="post-title">20190830CentOS7删bootloader玩</h2>
+            <div class="post-date">2021-04-22</div>
+            
+              <div class="feature-container" style="background-image: url('https://www.centos.org/assets/img/centos-logo-white.png')">
+              </div>
+            
+            <div class="post-content" v-pre>
+              <h1 id="centos7没事删bootloader和stage15阶段玩">CentOS7没事删bootloader和stage1.5阶段玩</h1>
+<blockquote>
+<p>众所周知bootloader位于磁盘前446字节，属于stage1.0阶段</p>
+<p>磁盘512字节后有一段空间是stage1.5阶段，用于找到启动的img和vmlinuz</p>
+<p>众所周知，stage1.0-stage2.0都可以用grub2-install（CentOS6是grub-install）</p>
+</blockquote>
+<p>参考：http://s4.51cto.com/wyfs02/M02/87/20/wKiom1fVBELjXsvaAAUkuL83t2Q304.jpg</p>
+<h3 id="一-先删bootlater">一、先删bootlater</h3>
+<h4 id="1-dd删磁盘前446字节">1、dd删磁盘前446字节</h4>
+<pre><code class="language-bash">[root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=1 count=446
+446+0 records in
+446+0 records out
+446 bytes (446 B) copied, 0.000932527 s, 478 kB/s
+[root@localhost ~]# hexdump -C -n 512 /dev/sda
+00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+000001b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 80 20  |............... |
+000001c0  21 00 83 aa 28 82 00 08  00 00 00 00 20 00 00 aa  |!...(....... ...|
+000001d0  29 82 8e fe ff ff 00 08  20 00 00 f8 df 18 00 00  |)....... .......|
+000001e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000001f0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 55 aa  |..............U.|
+00000200
+</code></pre>
+<h4 id="2-果然启动不起来了angry">2、果然启动不起来了😠</h4>
+<h4 id="3-光盘修复">3、光盘修复</h4>
+<p>参考：https://blog.51cto.com/14012942/2434054</p>
+<p>众所周知。stage1.0-stage2.0都用万能的grub2-install（CentOS6的grub太久，只能grub-install）</p>
+<figure data-type="image" tabindex="1"><img src="https://gitee.com/kill0es/blogimage/raw/master/img/1567166529623.png" alt="1567166529623" loading="lazy"></figure>
+<h3 id="二-删stage15阶段的东西">二、删stage1.5阶段的东西</h3>
+<h4 id="1-stage15阶段的东西位于磁盘的mbr后面的分区用来加载stage2">1、stage1.5阶段的东西位于磁盘的mbr后面的分区，用来加载stage2</h4>
+<p><strong>stage2.0就是内核镜像，initramfs，删这两个就用万能的重新安装内核即可，参考（没事别乱删）：</strong></p>
+<p><a href="https://blog.51cto.com/14012942/2434054">CentOS7删除/boot/initramfsxxx.img并尝试光盘救援模式修复</a></p>
+<p><a href="https://blog.51cto.com/14012942/2434068">CentOS7删vmlinuz玩</a></p>
+<p><a href="https://blog.51cto.com/14012942/2434055">CentOS7删boot目录玩</a></p>
+<p>现在破坏磁盘512字节后的内容：</p>
+<pre><code class="language-bash">[root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=1 count=10240 seek=512	#seek，oflag，跳过目标文件512字节再开始
+10240+0 records in
+10240+0 records out
+10240 bytes (10 kB) copied, 0.0173931 s, 589 kB/s
+</code></pre>
+<p><strong>启动后连grub界面都看不到</strong></p>
+<h4 id="2-救援模式救援">2、救援模式救援</h4>
+<p>使用stage阶段修复的万能法宝：grub2-install</p>
+<figure data-type="image" tabindex="2"><img src="https://gitee.com/kill0es/blogimage/raw/master/img/1567167848343.png" alt="1567167848343" loading="lazy"></figure>
+<h4 id="参考别人的博客看看httpswwwcnblogscommydba-jp10119498html">参考别人的博客看看：https://www.cnblogs.com/mydba-j/p/10119498.html</h4>
+
+            </div>
+            
+              <div class="tag-container">
+                
+                  <a href="https://kill0es.github.io/tag/WsfqvhG9O/" class="tag">
+                    centos
+                  </a>
+                
+              </div>
+            
+            
+              <div class="next-post">
+                <div class="next">下一篇</div>
+                <a href="https://kill0es.github.io/centos7-nei-he-sheng-ji/">
+                  <h3 class="post-title">
+                    centos7内核升级
+                  </h3>
+                </a>
+              </div>
+            
+
+            
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+<script type="application/javascript">
+
+AOS.init();
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+
+
+  </body>
+</html>
